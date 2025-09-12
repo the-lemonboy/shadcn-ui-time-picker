@@ -235,14 +235,12 @@ export default function TimePicker({
                       disabled={disabled}
                       className="pr-10 cursor-pointer"
                     />
-                    <Button
-                      variant="ghost"
-                      size="sm"
+                    <button 
                       className="absolute right-0 top-0 h-full px-3 py-2"
                       disabled={disabled}
                     >
                         <SvgIcon icon="clock" className="h-4 w-4" />
-                    </Button>
+                    </button>
                 </div>
             </PopoverTrigger>
             <PopoverContent className={`p-0 ${timeType === '12h' ? 'w-74' : 'w-60'}`}>
