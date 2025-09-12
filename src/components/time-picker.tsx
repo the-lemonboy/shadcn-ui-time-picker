@@ -6,13 +6,7 @@ import SvgIcon from '@/components/svg-icon';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-/**
- * 时间选择器
- * - 不使用第三方时间库
- * - 提供无限滚动和单轮滚动两种模式
- * - 此刻时间按钮
- * - 参数：12/24小时制, 滚轮时分秒
- */
+
 type WheelType = 'hour' | 'minute' | 'second' | 'period';
 
 export interface TimePickerProps {
