@@ -1,4 +1,4 @@
-# TimePicker Component Documentation
+# TimePicker Component For Shadcn
 
 A modern, customizable time picker component built with React, TypeScript, and shadcn/ui components. This component provides an intuitive interface for selecting time with support for both 12-hour and 24-hour formats.
 
@@ -163,7 +163,7 @@ function FormExample() {
             onChange={handleTimeChange('startTime')}
           />
         </div>
-      
+    
         <div>
           <label className="block text-sm font-medium mb-2">
             End Time
