@@ -7,11 +7,19 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 
+/**
+ * 时间选择器
+ * @TODO
+ * - 不使用第三方时间库
+ * - 此刻时间按钮
+ * - 参数：12/24小时制, 滚轮时分秒
+ */
 type WheelType = 'hour' | 'minute' | 'second' | 'period';
 
 export interface TimePickerProps {
     timeType?: '12h' | '24h';
     value: string;
+    format?: 'HH:mm:ss' | 'HH:mm';
     onChange: (value: string) => void;
     disabled?: boolean;
     className?: string;
@@ -28,6 +36,7 @@ export default function TimePicker({
     timeType = '24h',
     value,
     onChange,
+    format = 'HH:mm',
     disabled = false,
     className
 }: TimePickerProps) {
@@ -46,39 +55,40 @@ export default function TimePicker({
             };
         }
 
-        const timeRegex = timeType === '12h'
-            ? /^(\d{1,2}):(\d{2}):(\d{2})\s*(AM|PM)$/i
-            : /^(\d{1,2}):(\d{2}):(\d{2})$/;
+        const timeRegex = format === 'HH:mm'
+            ? (timeType === '12h' 
+                ? /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i
+                : /^(\d{1,2}):(\d{2})$/)
+            : (timeType === '12h' 
+                ? /^(\d{1,2}):(\d{2}):(\d{2})\s*(AM|PM)$/i
+                : /^(\d{1,2}):(\d{2}):(\d{2})$/);
 
         const match = timeStr.match(timeRegex);
         if (match) {
             return {
                 hour: parseInt(match[1], 10),
                 minute: parseInt(match[2], 10),
-                second: parseInt(match[3], 10),
-                period: timeType === '12h' ? (match[4]?.toUpperCase() as 'AM' | 'PM') : undefined
+                second: format === 'HH:mm' ? 0 : parseInt(match[3], 10),
+                period: timeType === '12h' 
+                    ? (format === 'HH:mm' ? match[3]?.toUpperCase() : match[4]?.toUpperCase()) as ('AM' | 'PM' | undefined) : undefined
             };
         }
-
         return {
             hour: timeType === '12h' ? 12 : 0,
             minute: 0,
             second: 0,
             period: timeType === '12h' ? 'AM' : undefined
         };
-    }, [timeType]);
+    }, [timeType, format]);
 
     // 格式化时间为字符串
     const formatTime = useCallback((time: TimeValue): string => {
         const hour = time.hour.toString().padStart(2, '0');
         const minute = time.minute.toString().padStart(2, '0');
         const second = time.second.toString().padStart(2, '0');
-
-        if (timeType === '12h') {
-            return `${hour}:${minute}:${second} ${time.period}`;
-        }
-        return `${hour}:${minute}:${second}`;
-    }, [timeType]);
+        const timeStr = format === 'HH:mm' ? `${hour}:${minute}` : `${hour}:${minute}:${second}`;
+        return timeType === '12h' ? `${timeStr} ${time.period}` : timeStr;
+    }, [timeType, format]);
 
     const [currentTime, setCurrentTime] = useState<TimeValue>(() => parseTime(value));
 
@@ -117,6 +127,7 @@ export default function TimePicker({
                 newTime.period = newValue as 'AM' | 'PM';
                 break;
             default:
+                break;
         }
 
         updateTime(newTime);
@@ -182,7 +193,7 @@ export default function TimePicker({
                               className={cn(
                                     "h-8 w-[70%] mx-auto flex items-center justify-center text-sm cursor-pointer transition-colors",
                                     "hover:opacity-100 hover:bg-gray-100",
-                                    isSelected && "!bg-primary !text-primary-foreground font-medium"
+                                    isSelected && "bg-primary  text-primary-foreground font-medium"
                                 )}
                               onClick={() => handleItemClick(type, item)}
                             >
@@ -207,13 +218,15 @@ export default function TimePicker({
                 scrollToItem('hour', timeType === '24h' ? currentTime.hour
                     : (currentTime.hour === 12 ? 0 : currentTime.hour - 1));
                 scrollToItem('minute', currentTime.minute);
-                scrollToItem('second', currentTime.second);
+                if (format === 'HH:mm:ss') {
+                    scrollToItem('second', currentTime.second);
+                }
                 if (timeType === '12h' && currentTime.period) {
                     scrollToItem('period', currentTime.period === 'AM' ? 0 : 1);
                 }
             }, 100);
         }
-    }, [isOpen, currentTime, scrollToItem, timeType]);
+    }, [isOpen, currentTime, scrollToItem, timeType, format]);
 
     // 监听外部值变化
     useEffect(() => {
@@ -235,15 +248,17 @@ export default function TimePicker({
                       disabled={disabled}
                       className="pr-10 cursor-pointer"
                     />
-                    <button 
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       className="absolute right-0 top-0 h-full px-3 py-2"
                       disabled={disabled}
                     >
                         <SvgIcon icon="clock" className="h-4 w-4" />
-                    </button>
+                    </Button>
                 </div>
             </PopoverTrigger>
-            <PopoverContent className={`p-0 ${timeType === '12h' ? 'w-74' : 'w-60'}`}>
+            <PopoverContent className={`p-0 ${(timeType === '12h' && format === 'HH:mm:ss') ? 'w-74' : (timeType === '24h' && format === 'HH:mm') ? 'w-45' : 'w-60'}`}>
              
                 <div className="flex h-48">
                     <div className="flex-1">
@@ -254,9 +269,11 @@ export default function TimePicker({
                         {wheelItems('minute')}
                     </div>
                     <Separator orientation="vertical" />
+                    {format === 'HH:mm:ss' && (
                     <div className="flex-1">
-                        {wheelItems('second')}
+                            {wheelItems('second')}
                     </div>
+                    )}
                     {timeType === '12h' && (
                         <>
                             <Separator orientation="vertical" />
@@ -273,9 +290,10 @@ export default function TimePicker({
                           size="sm"
                           onClick={setNowTime}
                         >
-                           Now
+                            Now
                         </Button>
                         <Button
+                          variant="default"
                           size="sm"
                           onClick={handleConfirm}
                         >

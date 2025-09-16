@@ -5,7 +5,7 @@ export default function Playground() {
     const [value, setValue] = useState('12:00:00');
 return (
     <div className='w-screen h-screen flex items-center justify-center'>
-        <TimePicker className='w-40' value={value} onChange={setValue} />
+        <TimePicker className='w-40' format='HH:mm' value={value} onChange={setValue} />
     </div>
 )
 
